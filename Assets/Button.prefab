@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 1887539670598914610}
   - component: {fileID: 6735811166382500928}
   - component: {fileID: 8352146088053556432}
+  - component: {fileID: 7157737522035858347}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -173,7 +174,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1887539670598914610
 CanvasRenderer:
@@ -203,8 +204,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -256,4 +257,29 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6735811166382500928}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7157737522035858347}
+        m_TargetAssemblyTypeName: buttonChoose, Assembly-CSharp
+        m_MethodName: chooseLevel
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &7157737522035858347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9074035831490682261}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 972a1144670327d4c97a18c9c8ca5d69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ChooseLevel: {fileID: 0}
