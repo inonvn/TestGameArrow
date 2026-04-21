@@ -66,6 +66,20 @@ public class SettingManager : MonoBehaviour
         PlayerPrefs.Save();
         Application.Quit();
     }
+    private void OnApplicationQuit()
+    {
+        PlayerPrefs.SetInt("yourUnlock", yourUnlock);
+        PlayerPrefs.Save();
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            PlayerPrefs.SetInt("yourUnlock", yourUnlock);
+            PlayerPrefs.Save();
+        }
+    }
     public void backToMenu ()
     {
         RandomInon.ButtonSound(audioS, clip[0]);

@@ -9,6 +9,7 @@ public class gameManager : MonoBehaviour
     public List<saveLevel> saveLevel;
     public saveLevel LevelNow;
     public CubeConA CubeConA;
+    public GameObject Than;
     public List<Sprite> ArrowImg;
     public GameObject block;
     public Dictionary<Vector3Int, CubeConA> dataGrid = new Dictionary<Vector3Int, CubeConA>();
@@ -101,10 +102,23 @@ public class gameManager : MonoBehaviour
                 faceRot = Quaternion.LookRotation(Vector3.up, Vector3.forward);
                 p3D.y -= (Mathf.RoundToInt(size / 2)+1); //(-Y)
             }
-            Vector3 worldPos = new Vector3(p3D.x, p3D.y, p3D.z);
+            Vector3Int worldPos = new Vector3Int(p3D.x, p3D.y, p3D.z);
             if (!dataGrid.ContainsKey(p3D))
             {
                 var dynamicCube = Instantiate(CubeConA, worldPos, faceRot,cha);
+                Vector3Int posThanPast = worldPos;
+                foreach (var cube in data.than)
+                {
+
+                  var e1 =  CubeConA.getThan(cube.than);
+
+                    var e2 = CubeConA.GetThanPos(CubeConA.CheckMat(data.Face, posThanPast, Mathf.FloorToInt(size / 2)).Item1, e1, CubeConA.CheckMat(data.Face, posThanPast, Mathf.FloorToInt(size / 2)).Item2);
+                    
+                    CubeConA.ThanAllPos.Add(e2);
+                    var e = Instantiate(Than,e2,faceRot,cha);
+                    
+                    posThanPast = e2;
+                }
                 dynamicCube.InitCube(p3D, data.huong);
                 
                 dataGrid.Add(p3D, dynamicCube);
@@ -275,22 +289,4 @@ public class gameManager : MonoBehaviour
         }
     }
 }
-public enum huong
-{
-    None,
-    tren,
-    duoi,
-    trai,
-    phai,
-    truoc,
-    sau,
-}
-public enum Mat
-{
-    mat1,
-    mat2,
-    mat3,
-    mat4,
-    mat5,
-    mat6,
-}
+

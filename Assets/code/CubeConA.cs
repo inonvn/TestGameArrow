@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ public class CubeConA : MonoBehaviour
     public bool IsAnima;
     public Vector3Int huongNow;
     public bool canMove;
-
+    public List<Vector3Int> ThanAllPos;
     public SpriteRenderer sprite;
     public Vector3Int pos3D;
     public bool State = true;
@@ -54,6 +55,88 @@ public class CubeConA : MonoBehaviour
             }  
             current = current + s1;
         }
+    }
+
+    public int[] getThan(Than than)
+    {
+        int[] vitri = {0,0};
+        switch (than) {
+            case Than.luilai: { vitri[1]-=1; break; }
+            case Than.tienlai: { vitri[1] +=1; break; }
+            case Than.sangphai: { vitri[0] +=1; break; }
+            case Than.sangtrai: { vitri[0] -= 1; break; }
+                
+        }
+        return vitri;
+        }
+    public Vector3Int GetThanPos (Mat mat,int[] vitri,Vector3Int Pos)
+    {
+        
+        switch (mat) {
+            case Mat.mat1: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break;  }
+                case Mat.mat2: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; }
+            case Mat.mat3: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; }
+            case Mat.mat4: { Pos += new Vector3Int(vitri[0],0, vitri[1]); break; }
+            case Mat.mat5: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; }
+            case Mat.mat6: { Pos += new Vector3Int(vitri[0],  vitri[1],0); break; }
+        }
+        return Pos;
+    }
+    public (Mat,Vector3Int) CheckMat(Mat matHienTai, Vector3Int Pos, int maxSize)
+    {
+        switch (matHienTai)
+        {
+            case Mat.mat1:
+                {
+                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
+                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
+                    else if (Pos.x > maxSize) { matHienTai = Mat.mat2; Pos.x = -maxSize; }
+                    else if (Pos.x < maxSize) { matHienTai = Mat.mat3; Pos.x = maxSize; }
+                    break;
+                }
+            case Mat.mat2 :
+                {
+                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
+                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
+                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
+                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
+                    break;
+                }
+            case Mat.mat3:
+                {
+                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
+                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
+                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
+                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
+                    break;
+                }
+            case Mat.mat4:
+                {
+                    if (Pos.x > maxSize) { matHienTai = Mat.mat3; Pos.x = -maxSize; }
+                    else if (Pos.x < maxSize) { matHienTai = Mat.mat2; Pos.x = maxSize; }
+                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
+                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
+                    break;
+                }
+            case Mat.mat5:
+                {
+                    if (Pos.x > maxSize) { matHienTai = Mat.mat3; Pos.x = -maxSize; }
+                    else if (Pos.x < maxSize) { matHienTai = Mat.mat2; Pos.x = maxSize; }
+                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
+                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
+                    break;
+                }
+            case Mat.mat6:
+                {
+                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
+                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
+                    else if (Pos.x > maxSize) { matHienTai = Mat.mat2; Pos.x = -maxSize; }
+                    else if (Pos.x < maxSize) { matHienTai = Mat.mat3; Pos.x = +maxSize; }
+                    break;
+                }
+
+        }
+        return (matHienTai,Pos);
     }
     public void getHuong(huong huong)
     {
