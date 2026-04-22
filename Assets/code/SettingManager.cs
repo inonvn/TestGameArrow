@@ -68,7 +68,7 @@ public class SettingManager : MonoBehaviour
     }
     private void OnApplicationQuit()
     {
-        PlayerPrefs.SetInt("yourUnlock", yourUnlock);
+        PlayerPrefs.SetInt("yourUnlock", gameManager.instance. yourUnlock);
         PlayerPrefs.Save();
     }
 
@@ -76,7 +76,7 @@ public class SettingManager : MonoBehaviour
     {
         if (pauseStatus)
         {
-            PlayerPrefs.SetInt("yourUnlock", yourUnlock);
+            PlayerPrefs.SetInt("yourUnlock", gameManager.instance. yourUnlock);
             PlayerPrefs.Save();
         }
     }

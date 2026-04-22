@@ -9,7 +9,7 @@ public class gameManager : MonoBehaviour
     public List<saveLevel> saveLevel;
     public saveLevel LevelNow;
     public CubeConA CubeConA;
-    public GameObject Than;
+   
     public List<Sprite> ArrowImg;
     public GameObject block;
     public Dictionary<Vector3Int, CubeConA> dataGrid = new Dictionary<Vector3Int, CubeConA>();
@@ -47,12 +47,17 @@ public class gameManager : MonoBehaviour
 
         if (cha != null)
         {
+            foreach (Transform child in cha)
+            {
+                Destroy(child.gameObject);
+            }
             cha.position = Vector3.zero;
             cha.rotation = Quaternion.identity;
         }
 
         dataGrid.Clear();
         staticBlocks.Clear();
+        CubeConA.ThanAllPos.Clear();
         blockCount = 0;
         for (int x = -(Mathf.FloorToInt(size / 2)); x<= (Mathf.FloorToInt(size / 2)); x++)
         {
@@ -105,21 +110,18 @@ public class gameManager : MonoBehaviour
             Vector3Int worldPos = new Vector3Int(p3D.x, p3D.y, p3D.z);
             if (!dataGrid.ContainsKey(p3D))
             {
-                var dynamicCube = Instantiate(CubeConA, worldPos, faceRot,cha);
-                Vector3Int posThanPast = worldPos;
-                foreach (var cube in data.than)
+                var dynamicCube = Instantiate(CubeConA, worldPos, faceRot, cha);
+                
+               
+                List<int[]> bodySteps = new List<int[]>();
+                foreach (var stepData in data.than)
                 {
-
-                  var e1 =  CubeConA.getThan(cube.than);
-
-                    var e2 = CubeConA.GetThanPos(CubeConA.CheckMat(data.Face, posThanPast, Mathf.FloorToInt(size / 2)).Item1, e1, CubeConA.CheckMat(data.Face, posThanPast, Mathf.FloorToInt(size / 2)).Item2);
-                    
-                    CubeConA.ThanAllPos.Add(e2);
-                    var e = Instantiate(Than,e2,faceRot,cha);
-                    
-                    posThanPast = e2;
+                    bodySteps.Add(dynamicCube.getThan(stepData.than));
                 }
-                dynamicCube.InitCube(p3D, data.huong);
+                
+                // Khởi tạo và vẽ LineRenderer qua các mặt
+                dynamicCube.InitCube(p3D, data.huong, data.Face);
+                dynamicCube.UpdateBodyPath(bodySteps, data.Face, p3D, size);
                 
                 dataGrid.Add(p3D, dynamicCube);
                 blockCount++; 

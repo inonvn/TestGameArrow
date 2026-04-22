@@ -9,16 +9,23 @@ public class CubeConA : MonoBehaviour
     public bool canMove;
     public List<Vector3Int> ThanAllPos;
     public SpriteRenderer sprite;
+    public LineRenderer lineRenderer;
     public Vector3Int pos3D;
     public bool State = true;
     public huong huong_enum;
-    public void InitCube(Vector3Int startPos, huong huongChiDinh)
+    public Mat matNow; 
+    public void InitCube(Vector3Int startPos, huong huongChiDinh, Mat matKhoiDau)
     {
         pos3D = startPos;
+        matNow = matKhoiDau;
         State = true;
         huong_enum = huongChiDinh; 
+        
+       
+        if (sprite == null && transform.childCount > 0) sprite = transform.GetChild(0).GetComponent<SpriteRenderer>();
+        if (sprite == null) sprite = GetComponentInChildren<SpriteRenderer>();
+        
         getHuong(huong_enum);
-     
     }
     public void MoveArrow()
     {
@@ -73,110 +80,152 @@ public class CubeConA : MonoBehaviour
     {
         
         switch (mat) {
-            case Mat.mat1: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break;  }
-                case Mat.mat2: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; }
-            case Mat.mat3: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; }
-            case Mat.mat4: { Pos += new Vector3Int(vitri[0],0, vitri[1]); break; }
-            case Mat.mat5: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; }
-            case Mat.mat6: { Pos += new Vector3Int(vitri[0],  vitri[1],0); break; }
+            case Mat.mat1: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break;  } // -Z face
+            case Mat.mat2: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break; } // +Z face
+            case Mat.mat3: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; } // -X face
+            case Mat.mat4: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; } // +X face
+            case Mat.mat5: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; } // +Y face
+            case Mat.mat6: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; } // -Y face
         }
         return Pos;
     }
-    public (Mat,Vector3Int) CheckMat(Mat matHienTai, Vector3Int Pos, int maxSize)
+    public void UpdateBodyPath(List<int[]> steps, Mat startMat, Vector3Int startPos, int size)
     {
+        if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
+        if (lineRenderer == null) return;
+        lineRenderer.useWorldSpace = false;
+
+        int maxSize = Mathf.FloorToInt(size / 2);
+        List<Vector3> pathPoints = new List<Vector3>();
+        pathPoints.Add(Vector3.zero);
+
+        Mat currentMat = startMat;
+        Vector3Int currentPos = startPos;
+
+        foreach (var step in steps)
+        {
+            Vector3Int prevPos = currentPos;
+            
+            // Tính toán vị trí tiếp theo
+            Vector3Int nextPos = GetThanPos(currentMat, step, currentPos);
+            var (newMat, wrappedPos) = CheckMat(currentMat, nextPos, maxSize);
+
+            if (newMat != currentMat)
+            {
+                Vector3 worldEdge = CalculateEdgePoint(prevPos, wrappedPos, currentMat, newMat, maxSize);
+                pathPoints.Add(transform.InverseTransformPoint(worldEdge));
+            }
+
+            pathPoints.Add(transform.InverseTransformPoint((Vector3)wrappedPos));
+            currentPos = wrappedPos;
+            currentMat = newMat;
+        }
+
+        lineRenderer.positionCount = pathPoints.Count;
+        lineRenderer.SetPositions(pathPoints.ToArray());
+    }
+
+    private Vector3 CalculateEdgePoint(Vector3 p1, Vector3 p2, Mat m1, Mat m2, int maxSize)
+    {
+        Vector3 edge = (p1 + p2) * 0.5f;
+        float limit = maxSize + 1.0f;
+
+    
+        if (Mathf.Abs(edge.x) > maxSize) edge.x = Mathf.Sign(edge.x) * limit;
+        if (Mathf.Abs(edge.y) > maxSize) edge.y = Mathf.Sign(edge.y) * limit;
+        if (Mathf.Abs(edge.z) > maxSize) edge.z = Mathf.Sign(edge.z) * limit;
+
+        return edge;
+    }
+
+    public (Mat, Vector3Int) CheckMat(Mat matHienTai, Vector3Int Pos, int maxSize)
+    {
+        int limit = maxSize + 1;
+
         switch (matHienTai)
         {
-            case Mat.mat1:
-                {
-                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
-                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
-                    else if (Pos.x > maxSize) { matHienTai = Mat.mat2; Pos.x = -maxSize; }
-                    else if (Pos.x < maxSize) { matHienTai = Mat.mat3; Pos.x = maxSize; }
-                    break;
-                }
-            case Mat.mat2 :
-                {
-                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
-                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
-                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
-                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
-                    break;
-                }
-            case Mat.mat3:
-                {
-                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
-                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
-                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
-                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
-                    break;
-                }
-            case Mat.mat4:
-                {
-                    if (Pos.x > maxSize) { matHienTai = Mat.mat3; Pos.x = -maxSize; }
-                    else if (Pos.x < maxSize) { matHienTai = Mat.mat2; Pos.x = maxSize; }
-                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
-                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
-                    break;
-                }
-            case Mat.mat5:
-                {
-                    if (Pos.x > maxSize) { matHienTai = Mat.mat3; Pos.x = -maxSize; }
-                    else if (Pos.x < maxSize) { matHienTai = Mat.mat2; Pos.x = maxSize; }
-                    else if (Pos.z > maxSize) { matHienTai = Mat.mat6; Pos.z = -maxSize; }
-                    else if (Pos.z < maxSize) { matHienTai = Mat.mat1; Pos.z = maxSize; }
-                    break;
-                }
-            case Mat.mat6:
-                {
-                    if (Pos.y > maxSize) { matHienTai = Mat.mat4; Pos.y = -maxSize; }
-                    else if (Pos.y < maxSize) { matHienTai = Mat.mat5; Pos.y = maxSize; }
-                    else if (Pos.x > maxSize) { matHienTai = Mat.mat2; Pos.x = -maxSize; }
-                    else if (Pos.x < maxSize) { matHienTai = Mat.mat3; Pos.x = +maxSize; }
-                    break;
-                }
-
+            case Mat.mat1: // Front (-Z face)
+                if (Pos.y > maxSize) return (Mat.mat5, new Vector3Int(Pos.x, limit, -maxSize)); // Up -> Top
+                if (Pos.y < -maxSize) return (Mat.mat6, new Vector3Int(Pos.x, -limit, -maxSize)); // Down -> Bottom
+                if (Pos.x > maxSize) return (Mat.mat4, new Vector3Int(limit, Pos.y, -maxSize)); // Right -> Right
+                if (Pos.x < -maxSize) return (Mat.mat3, new Vector3Int(-limit, Pos.y, -maxSize)); // Left -> Left
+                break;
+            case Mat.mat2: // Back (+Z face)
+                if (Pos.y > maxSize) return (Mat.mat5, new Vector3Int(Pos.x, limit, maxSize)); // Up -> Top
+                if (Pos.y < -maxSize) return (Mat.mat6, new Vector3Int(Pos.x, -limit, maxSize)); // Down -> Bottom
+                if (Pos.x > maxSize) return (Mat.mat4, new Vector3Int(limit, Pos.y, maxSize)); // Right -> Right
+                if (Pos.x < -maxSize) return (Mat.mat3, new Vector3Int(-limit, Pos.y, maxSize)); // Left -> Left
+                break;
+            case Mat.mat3: // Left (-X face)
+                if (Pos.y > maxSize) return (Mat.mat5, new Vector3Int(-maxSize, limit, Pos.z)); // Up -> Top
+                if (Pos.y < -maxSize) return (Mat.mat6, new Vector3Int(-maxSize, -limit, Pos.z)); // Down -> Bottom
+                if (Pos.z > maxSize) return (Mat.mat2, new Vector3Int(-maxSize, Pos.y, limit)); // Back -> Back
+                if (Pos.z < -maxSize) return (Mat.mat1, new Vector3Int(-maxSize, Pos.y, -limit)); // Front -> Front
+                break;
+            case Mat.mat4: // Right (+X face)
+                if (Pos.y > maxSize) return (Mat.mat5, new Vector3Int(maxSize, limit, Pos.z)); // Up -> Top
+                if (Pos.y < -maxSize) return (Mat.mat6, new Vector3Int(maxSize, -limit, Pos.z)); // Down -> Bottom
+                if (Pos.z > maxSize) return (Mat.mat2, new Vector3Int(maxSize, Pos.y, limit)); // Back -> Back
+                if (Pos.z < -maxSize) return (Mat.mat1, new Vector3Int(maxSize, Pos.y, -limit)); // Front -> Front
+                break;
+            case Mat.mat5: // Top (+Y face)
+                if (Pos.x > maxSize) return (Mat.mat4, new Vector3Int(limit, maxSize, Pos.z)); // Right -> Right
+                if (Pos.x < -maxSize) return (Mat.mat3, new Vector3Int(-limit, maxSize, Pos.z)); // Left -> Left
+                if (Pos.z > maxSize) return (Mat.mat2, new Vector3Int(Pos.x, maxSize, limit)); // Back -> Back
+                if (Pos.z < -maxSize) return (Mat.mat1, new Vector3Int(Pos.x, maxSize, -limit)); // Front -> Front
+                break;
+            case Mat.mat6: // Bottom (-Y face)
+                if (Pos.x > maxSize) return (Mat.mat4, new Vector3Int(limit, -maxSize, Pos.z)); // Right -> Right
+                if (Pos.x < -maxSize) return (Mat.mat3, new Vector3Int(-limit, -maxSize, Pos.z)); // Left -> Left
+                if (Pos.z > maxSize) return (Mat.mat2, new Vector3Int(Pos.x, -maxSize, limit)); // Back -> Back
+                if (Pos.z < -maxSize) return (Mat.mat1, new Vector3Int(Pos.x, -maxSize, -limit)); // Front -> Front
+                break;
         }
-        return (matHienTai,Pos);
+        return (matHienTai, Pos);
     }
     public void getHuong(huong huong)
     {
+        if (sprite == null && transform.childCount > 0) sprite = transform.GetChild(0).GetComponent<SpriteRenderer>();
+        if (sprite == null) sprite = GetComponentInChildren<SpriteRenderer>();
+        if (sprite == null) return;
+
+        
+        sprite.transform.localRotation = Quaternion.identity;
+
         switch (huong)
         {
-            case huong.None:
-                {
-                    huongNow = Vector3Int.zero; break;
-                }
             case huong.trai:
-                {
-                    if(gameManager.instance.ArrowImg.Count > 0) sprite.sprite = gameManager.instance.ArrowImg[0];
-                    huongNow = new Vector3Int(-1, 0, 0); break;
-                }
+                huongNow = Vector3Int.left; 
+                UpdateArrowVisual(0, 90f); break; 
             case huong.phai:
-                {
-                    if(gameManager.instance.ArrowImg.Count > 1) sprite.sprite = gameManager.instance.ArrowImg[1];
-                    huongNow = new Vector3Int(1, 0, 0); break;
-                }
+                huongNow = Vector3Int.right; 
+                UpdateArrowVisual(1, -90f); break;
             case huong.tren:
-                {
-                    if(gameManager.instance.ArrowImg.Count > 2) sprite.sprite = gameManager.instance.ArrowImg[2];
-                    huongNow = new Vector3Int(0, 1, 0); break;
-                }
+                huongNow = Vector3Int.up; 
+                UpdateArrowVisual(2, 0f); break;
             case huong.duoi:
-                {
-                    if(gameManager.instance.ArrowImg.Count > 3) sprite.sprite = gameManager.instance.ArrowImg[3];
-                    huongNow = new Vector3Int(0, -1, 0); break;
-                }
+                huongNow = Vector3Int.down; 
+                UpdateArrowVisual(3, 180f); break;
             case huong.truoc:
-                {
-                    if (gameManager.instance.ArrowImg.Count > 4) sprite.sprite = gameManager.instance.ArrowImg[4]; // Ảnh mũi tên trục Z
-                    huongNow = new Vector3Int(0, 0, -1); break; 
-                }
+                huongNow = new Vector3Int(0, 0, -1); 
+                UpdateArrowVisual(4, 0f); break; 
             case huong.sau:
-                {
-                    if (gameManager.instance.ArrowImg.Count > 5) sprite.sprite = gameManager.instance.ArrowImg[5];
-                    huongNow = new Vector3Int(0, 0, 1); break;  
-                }
+                huongNow = new Vector3Int(0, 0, 1); 
+                UpdateArrowVisual(5, 0f); break;
         }
+    }
+
+    private void UpdateArrowVisual(int spriteIndex, float rotationZ)
+    {
+        
+        if (gameManager.instance.ArrowImg != null && gameManager.instance.ArrowImg.Count > spriteIndex)
+        {
+            sprite.sprite = gameManager.instance.ArrowImg[spriteIndex];
+        }
+        else { 
+       
+        sprite.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
+            }
     }
 
     public void removeAndCheckEnd()
