@@ -21,26 +21,35 @@ MonoBehaviour:
     than:
     - than: 0
     - than: 0
-  - huong: 1
+  - huong: 4
     State: 0
     Face: 0
+    pos: {x: 1, y: 1, z: 0}
+    than:
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+  - huong: 3
+    State: 0
+    Face: 1
+    pos: {x: 1, y: 1, z: 0}
+    than:
+    - than: 3
+    - than: 3
+    - than: 3
+    - than: 3
+  - huong: 1
+    State: 0
+    Face: 2
+    pos: {x: 0, y: 1, z: 0}
+    than:
+    - than: 0
+    - than: 0
+  - huong: 1
+    State: 0
+    Face: 3
     pos: {x: 0, y: 0, z: 0}
     than:
     - than: 0
     - than: 0
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: -1, y: 0, z: 0}
-    than: []
-  - huong: 1
-    State: 0
-    Face: 0
-    pos: {x: 0, y: -1, z: 0}
-    than:
-    - than: 0
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: 0, y: 1, z: 0}
-    than: []

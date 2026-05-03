@@ -66,16 +66,20 @@ MonoBehaviour:
     - than: 1
     - than: 1
     - than: 1
-  - huong: 3
+  - huong: 4
     State: 0
     Face: 1
     pos: {x: 0, y: 0, z: 0}
     than:
-    - than: 3
-    - than: 3
-    - than: 3
-    - than: 3
-    - than: 3
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
   - huong: 3
     State: 0
     Face: 1
@@ -83,9 +87,9 @@ MonoBehaviour:
     than:
     - than: 3
     - than: 3
-    - than: 2
-    - than: 2
-    - than: 2
+    - than: 3
+    - than: 3
+    - than: 3
   - huong: 1
     State: 0
     Face: 1
@@ -101,8 +105,8 @@ MonoBehaviour:
     Face: 2
     pos: {x: 0, y: 0, z: 1}
     than:
-    - than: 2
-    - than: 2
+    - than: 3
+    - than: 3
   - huong: 1
     State: 0
     Face: 2
@@ -117,10 +121,10 @@ MonoBehaviour:
     Face: 2
     pos: {x: 0, y: 3, z: 3}
     than:
-    - than: 2
-    - than: 2
-    - than: 2
-    - than: 2
+    - than: 3
+    - than: 3
+    - than: 3
+    - than: 3
   - huong: 3
     State: 0
     Face: 3
@@ -128,15 +132,13 @@ MonoBehaviour:
     than:
     - than: 3
     - than: 3
-    - than: 2
-    - than: 2
+    - than: 3
+    - than: 3
   - huong: 1
     State: 0
     Face: 3
-    pos: {x: 0, y: 1, z: -1}
+    pos: {x: 0, y: -1, z: 1}
     than:
-    - than: 0
-    - than: 0
     - than: 0
     - than: 0
     - than: 0
@@ -183,8 +185,6 @@ MonoBehaviour:
     Face: 5
     pos: {x: 2, y: 0, z: -2}
     than:
-    - than: 2
-    - than: 2
-    - than: 2
-    - than: 2
-    - than: 2
+    - than: 3
+    - than: 3
+    - than: 3
