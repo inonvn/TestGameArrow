@@ -18,71 +18,173 @@ MonoBehaviour:
     State: 0
     Face: 0
     pos: {x: 1, y: 2, z: 0}
-  - huong: 1
+    than:
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
+  - huong: 4
     State: 0
     Face: 0
-    pos: {x: 1, y: 2, z: 0}
-  - huong: 1
+    pos: {x: 0, y: 1, z: 0}
+    than:
+    - than: 2
+    - than: 2
+  - huong: 4
     State: 0
     Face: 0
-    pos: {x: 3, y: 3, z: 0}
-  - huong: 1
+    pos: {x: 0, y: 0, z: 0}
+    than:
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+  - huong: 2
     State: 0
     Face: 0
-    pos: {x: 1, y: 3, z: 0}
-  - huong: 3
+    pos: {x: -1, y: 2, z: 0}
+    than:
+    - than: 1
+    - than: 1
+  - huong: 2
     State: 0
     Face: 0
-    pos: {x: 2, y: 3, z: 0}
+    pos: {x: -3, y: 2, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+  - huong: 2
+    State: 0
+    Face: 1
+    pos: {x: 0, y: 2, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
   - huong: 3
     State: 0
     Face: 1
-    pos: {x: 2, y: 3, z: 0}
+    pos: {x: 0, y: 0, z: 0}
+    than:
+    - than: 3
+    - than: 3
+    - than: 3
+    - than: 3
+    - than: 3
   - huong: 3
     State: 0
     Face: 1
-    pos: {x: 2, y: 1, z: 0}
+    pos: {x: 3, y: -2, z: 0}
+    than:
+    - than: 3
+    - than: 3
+    - than: 2
+    - than: 2
+    - than: 2
+  - huong: 1
+    State: 0
+    Face: 1
+    pos: {x: -3, y: 2, z: 0}
+    than:
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
+  - huong: 3
+    State: 0
+    Face: 2
+    pos: {x: 0, y: 0, z: 1}
+    than:
+    - than: 2
+    - than: 2
   - huong: 1
     State: 0
     Face: 2
-    pos: {x: 2, y: 0, z: 2}
-  - huong: 1
-    State: 0
-    Face: 0
-    pos: {x: 1, y: 0, z: 0}
+    pos: {x: 0, y: 0, z: 3}
+    than:
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
   - huong: 3
     State: 0
-    Face: 0
+    Face: 2
+    pos: {x: 0, y: 3, z: 3}
+    than:
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+  - huong: 3
+    State: 0
+    Face: 3
+    pos: {x: 0, y: 3, z: 3}
+    than:
+    - than: 3
+    - than: 3
+    - than: 2
+    - than: 2
+  - huong: 1
+    State: 0
+    Face: 3
+    pos: {x: 0, y: 1, z: -1}
+    than:
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
+    - than: 0
+  - huong: 2
+    State: 0
+    Face: 3
+    pos: {x: 0, y: 1, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+  - huong: 2
+    State: 0
+    Face: 4
+    pos: {x: 0, y: 0, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+  - huong: 2
+    State: 0
+    Face: 5
+    pos: {x: 0, y: 0, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+  - huong: 2
+    State: 0
+    Face: 5
     pos: {x: 2, y: 0, z: 0}
+    than:
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
+    - than: 1
   - huong: 3
     State: 0
-    Face: 0
-    pos: {x: -2, y: 0, z: 0}
-  - huong: 1
-    State: 0
-    Face: 0
-    pos: {x: 3, y: -3, z: 2}
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: 3, y: 0, z: 0}
-  - huong: 4
-    State: 0
-    Face: 0
-    pos: {x: 3, y: 1, z: 0}
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: 3, y: 0, z: 0}
-  - huong: 4
-    State: 0
-    Face: 0
-    pos: {x: 2, y: 3, z: 0}
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: 3, y: -1, z: 0}
-  - huong: 3
-    State: 0
-    Face: 0
-    pos: {x: 3, y: 0, z: 0}
+    Face: 5
+    pos: {x: 2, y: 0, z: -2}
+    than:
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2
+    - than: 2

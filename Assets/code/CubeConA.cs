@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -9,7 +10,7 @@ public class CubeConA : MonoBehaviour
     public bool canMove;
     public List<Vector3Int> ThanAllPos;
     public SpriteRenderer sprite;
-    public LineRenderer lineRenderer;
+    public List<(GameObject,Vector3Int)> bodyParts = new List<(GameObject,Vector3Int)>();
     public Vector3Int pos3D;
     public bool State = true;
     public huong huong_enum;
@@ -29,8 +30,9 @@ public class CubeConA : MonoBehaviour
     }
     public void MoveArrow()
     {
-        var grid = gameManager.instance.dataGrid;
-        gameManager.instance.settingManager.audioS.PlayOneShot(gameManager.instance.settingManager.clip[0]);
+        if (gameManager.instance.settingManager != null && gameManager.instance.settingManager.audioS != null)
+            gameManager.instance.settingManager.audioS.PlayOneShot(gameManager.instance.settingManager.clip[0]);
+            
         if (!IsAnima && State == true)
         {
             getHuong(huong_enum); 
@@ -41,7 +43,32 @@ public class CubeConA : MonoBehaviour
             } 
             else
             {
-                transform.GetChild(0).GetComponent<SpriteRenderer>().DOColor(Color.red, 0.5f).SetLoops(2, LoopType.Yoyo);
+
+                if (sprite != null)
+                {
+                    sprite.DOKill();
+                    sprite.color = Color.black;
+                    sprite.DOColor(Color.red, 0.5f).SetLoops(2, LoopType.Yoyo);
+                }
+                gameManager.instance.LostHP(1);
+                foreach (var part in bodyParts)
+                {
+                    if (part.Item1 != null)
+                    {
+                        SpriteRenderer sr = null;
+                        if (part.Item1.transform.childCount > 1)
+                            sr = part.Item1.transform.GetChild(1).GetComponent<SpriteRenderer>();
+                        else
+                            sr = part.Item1.GetComponentInChildren<SpriteRenderer>();
+                        
+                        if (sr != null)
+                        {
+                            sr.DOKill();
+                            sr.color = Color.black;
+                            sr.DOColor(Color.red, 0.5f).SetLoops(2, LoopType.Yoyo);
+                        }
+                    }
+                }
             }
         }
     }
@@ -52,11 +79,13 @@ public class CubeConA : MonoBehaviour
         var grid = gameManager.instance.dataGrid;
         for (int i = 0; i < 50; i++)
         {     
-            bool isHittingArrow = grid.ContainsKey(current) && grid[current].State == true;
-            bool isHittingStatic = gameManager.instance.staticBlocks.ContainsKey(current);
+            var isHittingArrow = grid.ContainsKey(current) && grid[current].State == true;
+            var isHittingStatic = gameManager.instance.staticBlocks.ContainsKey(current);
+            var isHittingBody = grid.Values.Any(cube => cube.State == true && cube.bodyParts.Any(part => part.Item1 != null && part.Item2 == current));
 
-            if (isHittingArrow || isHittingStatic)
+            if (isHittingArrow || isHittingStatic || isHittingBody)
             {
+
                 canMove = false; 
                 break;
             }  
@@ -78,70 +107,78 @@ public class CubeConA : MonoBehaviour
         }
     public Vector3Int GetThanPos (Mat mat,int[] vitri,Vector3Int Pos)
     {
-        
-        switch (mat) {
-            case Mat.mat1: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break;  } // -Z face
-            case Mat.mat2: { Pos += new Vector3Int(vitri[0], vitri[1], 0); break; } // +Z face
-            case Mat.mat3: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; } // -X face
-            case Mat.mat4: { Pos += new Vector3Int(0, vitri[1], vitri[0]); break; } // +X face
-            case Mat.mat5: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; } // +Y face
-            case Mat.mat6: { Pos += new Vector3Int(vitri[0], 0, vitri[1]); break; } // -Y face
-        }
+        Vector3 localOffset = new Vector3(vitri[0], vitri[1], 0);
+        Vector3 worldOffset = GetRotationForMat(mat) * localOffset;
+        Pos += new Vector3Int(Mathf.RoundToInt(worldOffset.x), Mathf.RoundToInt(worldOffset.y), Mathf.RoundToInt(worldOffset.z));
         return Pos;
     }
-    public void UpdateBodyPath(List<int[]> steps, Mat startMat, Vector3Int startPos, int size)
+    private Quaternion GetRotationForMat(Mat mat)
     {
-        if (lineRenderer == null) lineRenderer = GetComponent<LineRenderer>();
-        if (lineRenderer == null) return;
-        lineRenderer.useWorldSpace = false;
+        switch (mat)
+        {
+            case Mat.mat1: return Quaternion.LookRotation(Vector3.forward);
+            case Mat.mat2: return Quaternion.LookRotation(Vector3.back);
+            case Mat.mat3: return Quaternion.LookRotation(Vector3.right);
+            case Mat.mat4: return Quaternion.LookRotation(Vector3.left);
+            case Mat.mat5: return Quaternion.LookRotation(Vector3.down, Vector3.forward);
+            case Mat.mat6: return Quaternion.LookRotation(Vector3.up, Vector3.forward);
+        }
+        return Quaternion.identity;
+    }
+    public void UpdateBodyPath(List<Than> steps, Mat startMat, Vector3Int startPos, int size)
+    {
+    bool DauTien=true;
+        if (transform.childCount > 1)
+        {
+            transform.GetChild(0).gameObject.SetActive(true);
+            transform.GetChild(1).gameObject.SetActive(false);
+        }
+
+        foreach (var part in bodyParts) if (part.Item1 != null) Destroy(part.Item1);
+        bodyParts.Clear();
 
         int maxSize = Mathf.FloorToInt(size / 2);
-        List<Vector3> pathPoints = new List<Vector3>();
-        pathPoints.Add(Vector3.zero);
-
         Mat currentMat = startMat;
         Vector3Int currentPos = startPos;
 
-        foreach (var step in steps)
+        foreach (var than in steps)
         {
-            Vector3Int prevPos = currentPos;
-            
-            // Tính toán vị trí tiếp theo
+            int[] step = getThan(than);
             Vector3Int nextPos = GetThanPos(currentMat, step, currentPos);
             var (newMat, wrappedPos) = CheckMat(currentMat, nextPos, maxSize);
 
-            if (newMat != currentMat)
-            {
-                Vector3 worldEdge = CalculateEdgePoint(prevPos, wrappedPos, currentMat, newMat, maxSize);
-                pathPoints.Add(transform.InverseTransformPoint(worldEdge));
+            Quaternion faceRot = GetRotationForMat(newMat);
+
+            if (DauTien == false) { 
+                GameObject bodyPart = Instantiate(gameObject, wrappedPos, faceRot, transform.parent);
+                
+                if (than == Than.sangphai || than == Than.sangtrai)
+                {
+                    bodyPart.transform.Rotate(0, 0, 90f, Space.Self);
+                }
+
+                CubeConA comp = bodyPart.GetComponent<CubeConA>();
+                if (comp != null) Destroy(comp);
+
+                if (bodyPart.transform.childCount > 1)
+                {
+                    bodyPart.transform.GetChild(0).gameObject.SetActive(false);
+                    bodyPart.transform.GetChild(1).gameObject.SetActive(true);
+                }
+
+                bodyParts.Add((bodyPart,wrappedPos));
+
+                currentPos = wrappedPos;
+                currentMat = newMat;
             }
-
-            pathPoints.Add(transform.InverseTransformPoint((Vector3)wrappedPos));
-            currentPos = wrappedPos;
-            currentMat = newMat;
+            DauTien = false;
         }
-
-        lineRenderer.positionCount = pathPoints.Count;
-        lineRenderer.SetPositions(pathPoints.ToArray());
+            
+   
     }
-
-    private Vector3 CalculateEdgePoint(Vector3 p1, Vector3 p2, Mat m1, Mat m2, int maxSize)
-    {
-        Vector3 edge = (p1 + p2) * 0.5f;
-        float limit = maxSize + 1.0f;
-
-    
-        if (Mathf.Abs(edge.x) > maxSize) edge.x = Mathf.Sign(edge.x) * limit;
-        if (Mathf.Abs(edge.y) > maxSize) edge.y = Mathf.Sign(edge.y) * limit;
-        if (Mathf.Abs(edge.z) > maxSize) edge.z = Mathf.Sign(edge.z) * limit;
-
-        return edge;
-    }
-
     public (Mat, Vector3Int) CheckMat(Mat matHienTai, Vector3Int Pos, int maxSize)
     {
         int limit = maxSize + 1;
-
         switch (matHienTai)
         {
             case Mat.mat1: // Front (-Z face)
@@ -188,46 +225,45 @@ public class CubeConA : MonoBehaviour
         if (sprite == null && transform.childCount > 0) sprite = transform.GetChild(0).GetComponent<SpriteRenderer>();
         if (sprite == null) sprite = GetComponentInChildren<SpriteRenderer>();
         if (sprite == null) return;
-
-        
         sprite.transform.localRotation = Quaternion.identity;
+        float rotationZ = 0f;
+        Vector3 localDir = Vector3.zero;
 
         switch (huong)
         {
             case huong.trai:
-                huongNow = Vector3Int.left; 
-                UpdateArrowVisual(0, 90f); break; 
+                localDir = Vector3.left; 
+                rotationZ = 90f; break; 
             case huong.phai:
-                huongNow = Vector3Int.right; 
-                UpdateArrowVisual(1, -90f); break;
+                localDir = Vector3.right; 
+                rotationZ = -90f; break;
             case huong.tren:
-                huongNow = Vector3Int.up; 
-                UpdateArrowVisual(2, 0f); break;
+                localDir = Vector3.up; 
+                rotationZ = 0f; break;
             case huong.duoi:
-                huongNow = Vector3Int.down; 
-                UpdateArrowVisual(3, 180f); break;
+                localDir = Vector3.down; 
+                rotationZ = 180f; break;
             case huong.truoc:
-                huongNow = new Vector3Int(0, 0, -1); 
-                UpdateArrowVisual(4, 0f); break; 
+                localDir = Vector3.up; 
+                rotationZ = 0f; break; 
             case huong.sau:
-                huongNow = new Vector3Int(0, 0, 1); 
-                UpdateArrowVisual(5, 0f); break;
+                localDir = Vector3.down; 
+                rotationZ = 180f; break;
         }
-    }
 
-    private void UpdateArrowVisual(int spriteIndex, float rotationZ)
+        Vector3 gridDir = GetRotationForMat(matNow) * localDir;
+        huongNow = new Vector3Int(Mathf.RoundToInt(gridDir.x), Mathf.RoundToInt(gridDir.y), Mathf.RoundToInt(gridDir.z));
+        UpdateArrowVisual(rotationZ);
+    }
+    private void UpdateArrowVisual(float rotationZ)
     {
-        
-        if (gameManager.instance.ArrowImg != null && gameManager.instance.ArrowImg.Count > spriteIndex)
+        if (gameManager.instance.ArrowImg != null && gameManager.instance.ArrowImg.Count > 0)
         {
-            sprite.sprite = gameManager.instance.ArrowImg[spriteIndex];
+            sprite.sprite = gameManager.instance.ArrowImg[0];
         }
-        else { 
-       
+        
         sprite.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
-            }
     }
-
     public void removeAndCheckEnd()
     {
        gameManager.instance. settingManager.getCHangePoint();
@@ -235,8 +271,23 @@ public class CubeConA : MonoBehaviour
         State = false; 
         Vector3 localDir = new Vector3(huongNow.x, huongNow.y, huongNow.z);
         Vector3 worldDir = transform.parent != null ? transform.parent.TransformDirection(localDir) : localDir;
-        
         var vector = transform.position + (worldDir * 10f);
+        if (bodyParts.Count > 0)
+        {
+            float partDuration = 0.8f / bodyParts.Count;
+            for (int i = bodyParts.Count - 1; i >= 0; i--)
+            {
+                int index = i;
+                GameObject part = bodyParts[index].Item1;
+                if (part != null)
+                {
+                    float delay = (bodyParts.Count - 1 - index) * partDuration;
+                    part.transform.DOScale(Vector3.zero, partDuration).SetDelay(delay).OnComplete(() => {
+                        Destroy(part);
+                    });
+                }
+            }
+        }
         transform.DOMove(vector, 0.8f).SetEase(Ease.OutQuart).OnComplete(() => { 
             transform.DOScale(Vector3.zero, 0.5f); 
             IsAnima = false; 

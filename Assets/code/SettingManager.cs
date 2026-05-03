@@ -12,20 +12,20 @@ public class SettingManager : MonoBehaviour
     public CanvasGroup MenuUI;
     public GameObject BackToMenuIcon;
     public GameObject ExitGameIcon;
-     public CanvasGroup ChooseLevel;
-    public GameObject ChooseLevelCon;
-    public Transform ChooseLevelSpawn;
     public TextMeshProUGUI textNhapNhay;
     public CanvasGroup  UI;
     public CanvasGroup Hint;
     public TextMeshProUGUI ShowArrowLeft;
     public CanvasGroup showArrow;
     public CanvasGroup ShowWin;
+    public CanvasGroup ShowLost;
     public RectTransform[] safeAreaPanels;
     public Slider ChangeV;
     public AudioSource audioS;
     public AudioClip[] clip;
-   
+    public GameObject hpCube;
+    public RectTransform spawnHp;
+
     public void TurnOnSetting()
     {
         RandomInon.ButtonSound(audioS, clip[0]);
@@ -43,21 +43,16 @@ public class SettingManager : MonoBehaviour
         UISetting.gameObject.SetActive(false);
         iconSetting.gameObject.SetActive(true);
     }
-    int n = 1;
+   
     public void clickAnyWhereToStart()
     {
         Hint.gameObject.SetActive(false);
+        ShowWin.gameObject.SetActive(false);
         showArrow.gameObject.SetActive(false);
         gameManager.instance.inMenu = false;
         MenuUI.gameObject.SetActive(false);
-        ChooseLevel.gameObject.SetActive(true);
-        RandomInon.FadeOut(ChooseLevel);
-        for (; n <= gameManager.instance.yourUnlock; n++)
-        {
-            var e = Instantiate(ChooseLevelCon, ChooseLevelSpawn);
-            e.GetComponent<buttonChoose>(). ChooseLevel = ChooseLevel;
-            e.GetComponentInChildren<TextMeshProUGUI>().SetText("level " + n);
-        }
+        gameManager.instance.loadLevel(gameManager.instance.yourUnlock);
+      
     }
    
     public void exit()
@@ -68,7 +63,7 @@ public class SettingManager : MonoBehaviour
     }
     private void OnApplicationQuit()
     {
-        PlayerPrefs.SetInt("yourUnlock", gameManager.instance. yourUnlock);
+        PlayerPrefs.SetInt("yourUnlock", gameManager.instance.yourUnlock);
         PlayerPrefs.Save();
     }
 
@@ -76,13 +71,14 @@ public class SettingManager : MonoBehaviour
     {
         if (pauseStatus)
         {
-            PlayerPrefs.SetInt("yourUnlock", gameManager.instance. yourUnlock);
+            PlayerPrefs.SetInt("yourUnlock", gameManager.instance.yourUnlock);
             PlayerPrefs.Save();
         }
     }
     public void backToMenu ()
     {
         RandomInon.ButtonSound(audioS, clip[0]);
+        foreach (Transform k in spawnHp.gameObject.transform) { GameObject.Destroy(k.gameObject); }
         MenuUI.gameObject.SetActive(true);
         RandomInon.FadeOut(MenuUI);
         UISetting.gameObject.SetActive(false);
@@ -114,6 +110,20 @@ public class SettingManager : MonoBehaviour
         if (hintCube != null)
         {
             hintCube.transform.GetChild(0).GetComponent<SpriteRenderer>().DOColor(Color.yellow, 0.5f).SetLoops(2, LoopType.Yoyo);
+            foreach (var part in hintCube.bodyParts)
+            {
+                if (part.Item1 != null)
+                {
+                    SpriteRenderer sr = null;
+                    if (part.Item1.transform.childCount > 1)
+                        sr = part.Item1.transform.GetChild(1).GetComponent<SpriteRenderer>();
+                    else
+                        sr = part.Item1.GetComponentInChildren<SpriteRenderer>();
+                    
+                    if (sr != null)
+                        sr.DOColor(Color.yellow, 0.5f).SetLoops(2, LoopType.Yoyo);
+                }
+            }
         }
     }    
     public void getCHangePoint()
@@ -161,8 +171,20 @@ public class SettingManager : MonoBehaviour
         ShowWin.gameObject.SetActive(true);
         ShowWin.alpha = 0;
         ShowWin.DOKill();
-        ShowWin.DOFade(1, 1.5f).OnComplete(() => { ShowWin.gameObject.SetActive(false); clickAnyWhereToStart(); });
+        ShowWin.DOFade(1, 1.5f).OnComplete(() => { ShowWin.gameObject.SetActive(true);iconSetting.gameObject.SetActive(true); });
+    }  
+    public void ShowLostAndBack()
+    {
+        audioS.PlayOneShot(clip[2]);
+        ShowLost.gameObject.SetActive(true);
+        ShowLost.alpha = 0;
+        ShowLost.DOKill();
+        ShowLost.DOFade(1, 1.5f).OnComplete(() => { ShowLost.gameObject.SetActive(true); iconSetting.gameObject.SetActive(true); });
     }    
-
+    public void ClickToPlayAgain()
+    {
+        ShowLost.gameObject.SetActive(false);
+        gameManager.instance.loadLevel(gameManager.instance.yourUnlock);
+    }    
 
 }

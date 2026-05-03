@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class gameManager : MonoBehaviour
 {
@@ -9,42 +10,47 @@ public class gameManager : MonoBehaviour
     public List<saveLevel> saveLevel;
     public saveLevel LevelNow;
     public CubeConA CubeConA;
-   
     public List<Sprite> ArrowImg;
     public GameObject block;
     public Dictionary<Vector3Int, CubeConA> dataGrid = new Dictionary<Vector3Int, CubeConA>();
-    public Dictionary<Vector3Int, GameObject> staticBlocks = new Dictionary<Vector3Int, GameObject>(); // Quản lý khối tĩnh
+    public Dictionary<Vector3Int, GameObject> staticBlocks = new Dictionary<Vector3Int, GameObject>(); 
     public int blockCount = 0;
     public Transform cha;
    public SettingManager settingManager;
-    public int yourUnlock=1;
+    public int yourUnlock=0;
+    public int yourHP;
+    int HPNow;
     public void Awake()
     {
         instance = this;
         if (PlayerPrefs.HasKey("yourUnlock"))
         {
             yourUnlock = PlayerPrefs.GetInt("yourUnlock");
+            if (yourUnlock >= saveLevel.Count) yourUnlock = 0;
         }
         else
         {
-            yourUnlock = 1;
+            yourUnlock = 0;
         }
     }
     
     void Start()
     {
         inMenu = true;
+        HPNow = yourHP;
     }
    
     public void loadLevel(int i)
     {
+        HPNow = yourHP;
+        if (i >= saveLevel.Count) i = 0;
         settingManager.Hint.gameObject.SetActive(true);
       settingManager.showArrow.gameObject.SetActive(true); 
         LevelNow = saveLevel[i];
         size = LevelNow.CubeSize;
         foreach (var c in dataGrid.Values) if (c != null) Destroy(c.gameObject);
         foreach (var b in staticBlocks.Values) if (b != null) Destroy(b.gameObject);
-
+        foreach(Transform k in settingManager.spawnHp.gameObject.transform) { GameObject.Destroy(k.gameObject); }
         if (cha != null)
         {
             foreach (Transform child in cha)
@@ -113,16 +119,13 @@ public class gameManager : MonoBehaviour
                 var dynamicCube = Instantiate(CubeConA, worldPos, faceRot, cha);
                 
                
-                List<int[]> bodySteps = new List<int[]>();
+                List<Than> bodySteps = new List<Than>();
                 foreach (var stepData in data.than)
                 {
-                    bodySteps.Add(dynamicCube.getThan(stepData.than));
+                    bodySteps.Add(stepData.than);
                 }
-                
-                // Khởi tạo và vẽ LineRenderer qua các mặt
                 dynamicCube.InitCube(p3D, data.huong, data.Face);
                 dynamicCube.UpdateBodyPath(bodySteps, data.Face, p3D, size);
-                
                 dataGrid.Add(p3D, dynamicCube);
                 blockCount++; 
             }
@@ -169,19 +172,20 @@ public class gameManager : MonoBehaviour
                 }
             }
         }
+        settingManager.getCHangePoint();
+        for (int e1 = 0; e1 < HPNow; e1++) { var e2 = Instantiate(settingManager.hpCube, settingManager.spawnHp); }
     }
     private Vector3 previousMousePosition;
     public float rotationSpeed = 0.5f;
     public float zoomSpeed = 5f;
-    public float minZoom = 10f; 
-    public float maxZoom = 100f; 
+    public float minZoomZ = -18f; 
+    public float maxZoomZ = -6f; 
     private bool isDragging = false;
     private CubeConA clickedCube = null;
 
     void Update()
     {
         if (inMenu) return;
-
         if (Input.GetMouseButtonDown(0))
         {
             previousMousePosition = Input.mousePosition;
@@ -190,14 +194,23 @@ public class gameManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                hit.collider.TryGetComponent<CubeConA>(out clickedCube);
+                if (!hit.collider.TryGetComponent<CubeConA>(out clickedCube))
+                {
+                    foreach (var cube in dataGrid.Values)
+                    {
+                        if (cube != null && cube.bodyParts.Any(p => p.Item1 == hit.collider.gameObject))
+                        {
+                            clickedCube = cube;
+                            break;
+                        }
+                    }
+                }
             }
             else
             {
                 clickedCube = null;
             }
         }
-
         if (Input.GetMouseButton(0))
         {
             Vector3 delta = Input.mousePosition - previousMousePosition;
@@ -212,7 +225,6 @@ public class gameManager : MonoBehaviour
             }
             previousMousePosition = Input.mousePosition;
         }
-
         if (Input.GetMouseButtonUp(0))
         {
             if (!isDragging && clickedCube != null && Input.touchCount < 2)
@@ -221,67 +233,59 @@ public class gameManager : MonoBehaviour
             }
             clickedCube = null;
         }
-
-        if (Camera.main != null)
+        var zoomDelta = 0f;
+        var scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (scroll != 0.0f)
         {
-            float zoomDelta = 0f;
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (scroll != 0.0f)
-            {
-                zoomDelta = -scroll * zoomSpeed * 2f; 
-            }
-            if (Input.touchCount == 2)
-            {
-                Touch touchZero = Input.GetTouch(0);
-                Touch touchOne = Input.GetTouch(1);
+            zoomDelta = scroll * zoomSpeed * 0.5f; 
+        }
+        if (Input.touchCount == 2)
+        {
+            var touchZero = Input.GetTouch(0);
+            var touchOne = Input.GetTouch(1);
 
-                Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
-                Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+            var touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
+            var touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+            var prevTouchDeltaMag = (touchZeroPrevPos - touchOnePrevPos).magnitude;
+            var touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
 
-                float prevTouchDeltaMag = (touchZeroPrevPos - touchOnePrevPos).magnitude;
-                float touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
+            var deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
 
-                float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
-
-                zoomDelta = deltaMagnitudeDiff * 0.05f * zoomSpeed;
-            }
-
-            if (zoomDelta != 0f)
-            {
-                if (Camera.main.orthographic)
-                {
-                    Camera.main.orthographicSize += zoomDelta;
-                    Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, minZoom, maxZoom);
-                }
-                else
-                {
-                    Camera.main.fieldOfView += zoomDelta * 5f; 
-                    Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView, minZoom, maxZoom);
-                }
-            }
+            zoomDelta = -deltaMagnitudeDiff * 0.005f * zoomSpeed;
+        }
+        if (zoomDelta != 0f && Camera.main != null)
+        {
+            var camPos = Camera.main.transform.position;
+            camPos.z += zoomDelta * 5f;
+            camPos.z = Mathf.Clamp(camPos.z, minZoomZ, maxZoomZ);
+            Camera.main.transform.position = camPos;
         }
     }
-    
     public void checkWin ()
     {
-
         blockCount--;
+        settingManager.getCHangePoint();
         if (blockCount <= 0)
         {
-            if (yourUnlock<saveLevel.Count) yourUnlock++;
+            if (yourUnlock < saveLevel.Count) yourUnlock++;
+            else yourUnlock = 0;
             PlayerPrefs.SetInt("yourUnlock", yourUnlock);
             PlayerPrefs.Save();
+            foreach (Transform k in settingManager.spawnHp.gameObject.transform) { GameObject.Destroy(k); }
             settingManager.ShowWinAndBack();
             Debug.Log("gay");
         }
     }
-
+    public void LostHP (int i)
+    { 
+        HPNow -= i; Destroy(settingManager.spawnHp.GetChild(0).gameObject); settingManager.audioS.PlayOneShot(settingManager.clip[3]);
+        if (HPNow<=0) { HPNow = 0;settingManager.ShowLostAndBack(); }
+    }    
     private void OnApplicationQuit()
     {
         PlayerPrefs.SetInt("yourUnlock", yourUnlock);
         PlayerPrefs.Save();
     }
-
     private void OnApplicationPause(bool pauseStatus)
     {
         if (pauseStatus)
